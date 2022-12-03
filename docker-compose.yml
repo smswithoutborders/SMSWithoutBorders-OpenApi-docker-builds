@@ -31,28 +31,66 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-  
-  open-api:
+
+  dev-back-end:
+    image: dev-back-end
     restart: always
     depends_on:
       mysql:
         condition: service_healthy
+    container_name: dev-back-end
+    ports:
+      - "${DEV_BACK_END_SERVER_PORT:?err}:${DEV_BACK_END_SERVER_PORT}"
+      - "${DEV_BACK_END_SERVER_PORT_SSL:?err}:${DEV_BACK_END_SERVER_PORT_SSL}"
+    build:
+      context: ${PATH_DEV_BACK_END}
+      dockerfile: Dockerfile
+      target: production
+    volumes:
+      - "${SSL_FILE_PATH:?err}:${SSL_FILE_PATH}"
+    environment:
+      - HOST=${DEV_BACK_END_HOST:?err}
+      - PORT=${DEV_BACK_END_SERVER_PORT:?err}
+
+      - SSL_SERVER_NAME=${DEV_BACK_END_HOST:?err}
+      - SSL_PORT=${DEV_BACK_END_SERVER_PORT_SSL:?err}
+      - SSL_CERTIFICATE=${SSL_CERTIFICATE:?err}
+      - SSL_KEY=${SSL_KEY:?err}
+      - SSL_PEM=${SSL_PEM:?err}
+
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE_DEV_BACK_END}
+
+      - OPENAPI_HOST=https://${OPEN_API_HOST:?err}
+      - OPENAPI_PORT=${OPEN_API_SERVER_PORT_SSL:?err}
+      - OPENAPI_VERSION=${OPEN_API_SERVER_VERSION:?err}
+
+      - ID=${SETUP_ID:?err}
+      - KEY=${SETUP_KEY:?err}
+
+  open-api:
+    image: open-api
+    restart: always
+    depends_on:
+      - dev-back-end
     container_name: open-api
     ports:
-      - "${OPENAPI_SERVER_PORT:?err}:${OPENAPI_SERVER_PORT}"
-      # - "${OPENAPI_SERVER_PORT_SSL:?err}:${OPENAPI_SERVER_PORT_SSL}"
-    build: 
-      context: /${PATH_OPEN_API}
+      - "${OPEN_API_SERVER_PORT:?err}:${OPEN_API_SERVER_PORT}"
+      - "${OPEN_API_SERVER_PORT_SSL:?err}:${OPEN_API_SERVER_PORT_SSL}"
+    build:
+      context: ${PATH_OPEN_API}
       dockerfile: Dockerfile
-      target: development
+      target: production
     volumes:
       - "${SSL_FILE_PATH:?err}:${SSL_FILE_PATH}"
     environment:
       - HOST=${OPEN_API_HOST:?err}
-      - PORT=${OPENAPI_SERVER_PORT:?err}
+      - PORT=${OPEN_API_SERVER_PORT:?err}
 
       - SSL_SERVER_NAME=${OPEN_API_HOST:?err}
-      # - SSL_PORT=${OPENAPI_SERVER_PORT_SSL:?err}
+      - SSL_PORT=${OPEN_API_SERVER_PORT_SSL:?err}
       - SSL_CERTIFICATE=${SSL_CERTIFICATE:?err}
       - SSL_KEY=${SSL_KEY:?err}
       - SSL_PEM=${SSL_PEM:?err}
@@ -62,9 +100,9 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE_OPEN_API}
 
-      - DEV_HOST=http://${DEV_HOST:?err}
-      - DEV_PORT=${DEV_PORT:?err}
-      - DEV_VERSION=${DEV_VERSION:?err}
+      - DEV_HOST=https://${DEV_BACK_END_HOST:?err}
+      - DEV_PORT=${DEV_BACK_END_SERVER_PORT_SSL:?err}
+      - DEV_VERSION=${DEV_BACK_END_SERVER_VERSION:?err}
 
       - ID=${SETUP_ID:?err}
       - KEY=${SETUP_KEY:?err}
@@ -78,9 +116,38 @@ services:
       - RABBITMQ_EXCHANGE_TYPE=${RABBITMQ_EXCHANGE_TYPE:-topic}
       - RABBITMQ_QUEUE_NAME=${RABBITMQ_QUEUE_NAME:-OUTGOING_SMS}
 
-      - RABBITMQ_SSL_ACTIVE=${RABBITMQ_SSL_ACTIVE}
-      - RABBITMQ_SSL_HOST=${RABBITMQ_SSL_HOST}
-      # - RABBITMQ_SSL_PORT=${RABBITMQ_SERVER_PORT_SSL}
-      - RABBITMQ_SSL_CACERT=${SSL_PEM}
-      - RABBITMQ_SSL_CRT=${SSL_CERTIFICATE}
-      - RABBITMQ_SSL_KEY=${SSL_KEY}
+      - RABBITMQ_SSL_ACTIVE=true
+      - RABBITMQ_SSL_HOST=rabbitmq
+      - RABBITMQ_SSL_PORT=${RABBITMQ_SERVER_PORT_SSL:-5672}
+      - RABBITMQ_SSL_CACERT=${SSL_PEM:?err}
+      - RABBITMQ_SSL_CRT=${SSL_CERTIFICATE:?err}
+      - RABBITMQ_SSL_KEY=${SSL_KEY:?err}
+
+  dev-front-end:
+    image: dev-front-end
+    container_name: dev-front-end
+    depends_on:
+      - dev-back-end
+    ports:
+      - "80:443"
+      - "443:443"
+    volumes:
+      - type: bind
+        source: ${SSL_CERTIFICATE}
+        target: /usr/local/apache2/conf/server.crt
+      - type: bind
+        source: ${SSL_KEY}
+        target: /usr/local/apache2/conf/server.key
+      - type: bind
+        source: ${SSL_PEM}
+        target: /usr/local/apache2/conf/server.pem
+    build:
+      context: ${PATH_DEV_FRONT_END}
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - SWOB_DEV_BE_HOST="https://${DEV_BACK_END_HOST}:${DEV_BACK_END_SERVER_PORT_SSL}"
+        - SWOB_DEV_BE_VERSION=${DEV_BACK_END_SERVER_VERSION}
+        - SWOB_DEV_SSL_CRT_FILE=${SSL_CERTIFICATE:?err}
+        - SWOB_DEV_SSL_KEY_FILE=${SSL_KEY:?err}
+        - SWOB_DEV_SSL_ENABLE=true
