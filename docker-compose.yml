@@ -60,7 +60,7 @@ services:
     environment:
       - HOST=${DEV_BACK_END_HOST:?err}
       - PORT=${DEV_BACK_END_SERVER_PORT:?err}
-      - ORIGINS=["https://${HOST}:80","https://${HOST}:443"]
+      - ORIGINS=["https://${DEV_BACK_END_HOST}:80","https://${DEV_BACK_END_HOST}:443"]
       
       - SSL_SERVER_NAME=${DEV_BACK_END_HOST:?err}
       - SSL_PORT=${DEV_BACK_END_SERVER_PORT_SSL:?err}
