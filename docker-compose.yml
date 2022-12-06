@@ -58,11 +58,11 @@ services:
     volumes:
       - "${SSL_FILE_PATH:?err}:${SSL_FILE_PATH}"
     environment:
-      - HOST=${DEV_BACK_END_HOST:?err}
+      - HOST=${HOST:?err}
       - PORT=${DEV_BACK_END_SERVER_PORT:?err}
-      - ORIGINS=["https://${DEV_BACK_END_HOST}:80","https://${DEV_BACK_END_HOST}:443"]
+      - ORIGINS=["https://${HOST}:80","https://${HOST}:443"]
       
-      - SSL_SERVER_NAME=${DEV_BACK_END_HOST:?err}
+      - SSL_SERVER_NAME=${HOST:?err}
       - SSL_PORT=${DEV_BACK_END_SERVER_PORT_SSL:?err}
       - SSL_CERTIFICATE=${SSL_CERTIFICATE:?err}
       - SSL_KEY=${SSL_KEY:?err}
@@ -73,7 +73,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE_DEV_BACK_END}
 
-      - OPENAPI_HOST=https://${OPEN_API_HOST:?err}
+      - OPENAPI_HOST=https://${HOST:?err}
       - OPENAPI_PORT=${OPEN_API_SERVER_PORT_SSL:?err}
       - OPENAPI_VERSION=${OPEN_API_SERVER_VERSION:?err}
 
@@ -96,10 +96,10 @@ services:
     volumes:
       - "${SSL_FILE_PATH:?err}:${SSL_FILE_PATH}"
     environment:
-      - HOST=${OPEN_API_HOST:?err}
+      - HOST=${HOST:?err}
       - PORT=${OPEN_API_SERVER_PORT:?err}
 
-      - SSL_SERVER_NAME=${OPEN_API_HOST:?err}
+      - SSL_SERVER_NAME=${HOST:?err}
       - SSL_PORT=${OPEN_API_SERVER_PORT_SSL:?err}
       - SSL_CERTIFICATE=${SSL_CERTIFICATE:?err}
       - SSL_KEY=${SSL_KEY:?err}
@@ -110,7 +110,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE_OPEN_API}
 
-      - DEV_HOST=https://${DEV_BACK_END_HOST:?err}
+      - DEV_HOST=https://${HOST:?err}
       - DEV_PORT=${DEV_BACK_END_SERVER_PORT_SSL:?err}
       - DEV_VERSION=${DEV_BACK_END_SERVER_VERSION:?err}
 
@@ -157,7 +157,7 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        - SWOB_DEV_BE_HOST="https://${DEV_BACK_END_HOST}:${DEV_BACK_END_SERVER_PORT_SSL}"
+        - SWOB_DEV_BE_HOST="https://${HOST}:${DEV_BACK_END_SERVER_PORT_SSL}"
         - SWOB_DEV_BE_VERSION=${DEV_BACK_END_SERVER_VERSION}
         - SWOB_DEV_SSL_CRT_FILE=${SSL_CERTIFICATE:?err}
         - SWOB_DEV_SSL_KEY_FILE=${SSL_KEY:?err}
