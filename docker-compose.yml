@@ -1,9 +1,14 @@
 version: '3.9'
 
+volumes:
+  db-data:
+  rmq-data:
+
 services:
   mysql:
     image: mariadb:10.5
-    container_name: mariadb
+    volumes:
+      - db-data:/var/lib/mysql
     ports:
       - "3306:3306"
     restart: on-failure
@@ -17,12 +22,14 @@ services:
       retries: 120
 
   rabbitmq:
-    image: rabbitmq
-    container_name: rabbitmq
-    restart: on-failure
+    restart: always
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
     volumes:
       - "${SSL_FILE_PATH:?err}:${SSL_FILE_PATH}"
-      - "./data:/var/lib/rabbitmq/mnesia/"
+      - "rmq-data:/var/lib/rabbitmq/mnesia/"
     build:
       context: ${PATH_RMQ}
       dockerfile: Dockerfile
@@ -42,12 +49,10 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
 
   dev-back-end:
-    image: dev-back-end
     restart: always
     depends_on:
       mysql:
         condition: service_healthy
-    container_name: dev-back-end
     ports:
       - "${DEV_BACK_END_SERVER_PORT:?err}:${DEV_BACK_END_SERVER_PORT}"
       - "${DEV_BACK_END_SERVER_PORT_SSL:?err}:${DEV_BACK_END_SERVER_PORT_SSL}"
@@ -81,11 +86,9 @@ services:
       - KEY=${SETUP_KEY:?err}
 
   open-api:
-    image: open-api
     restart: always
     depends_on:
       - dev-back-end
-    container_name: open-api
     ports:
       - "${OPEN_API_SERVER_PORT:?err}:${OPEN_API_SERVER_PORT}"
       - "${OPEN_API_SERVER_PORT_SSL:?err}:${OPEN_API_SERVER_PORT_SSL}"
@@ -135,8 +138,7 @@ services:
       - RABBITMQ_SSL_KEY=${SSL_KEY:?err}
 
   dev-front-end:
-    image: dev-front-end
-    container_name: dev-front-end
+    restart: always
     depends_on:
       - dev-back-end
     ports:

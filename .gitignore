@@ -1,3 +1,6 @@
-data/
-.env
 repos/
+configs/
+*.sh
+*.swp
+*.pem
+*.key

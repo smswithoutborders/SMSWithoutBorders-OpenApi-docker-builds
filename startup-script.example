@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+SSL_FILE_PATH= \
+SSL_SERVER_NAME= \
+SSL_CERTIFICATE= \
+SSL_KEY= \
+SSL_PEM= \
+HOST= \
+ORIGINS= \
+SHARED_KEY= \
+HASHING_SALT= \
+SETUP_ID= \
+SETUP_KEY= \
+MYSQL_HOST= \
+MYSQL_USER= \
+MYSQL_PASSWORD= \
+RMQ_SSL= \
+RABBITMQ_DEFAULT_USER= \
+RABBITMQ_DEFAULT_PASS= \
+docker-compose --project-name developers up -d --build

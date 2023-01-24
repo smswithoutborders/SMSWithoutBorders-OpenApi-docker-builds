@@ -5,36 +5,22 @@ DEV-BACK-END=dev-back-end
 OPEN-API=open-api
 RABBITMQ=rabbitmq
 
-make: clean staging
+make: clone
 
 deps:
 	@mkdir -p ${REPOS}
 
 clone: deps
-	@git clone https://github.com/smswithoutborders/SMSWithoutBorders-Dev-FE.git ${REPOS}/${DEV-FRONT-END}
-	@git clone https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE.git ${REPOS}/${DEV-BACK-END}
-	@git clone https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI.git ${REPOS}/${OPEN-API}
-	@git clone https://github.com/smswithoutborders/SMSWithoutBorders-Product-deps-RabbitMQ.git ${REPOS}/${RABBITMQ}
+	@git clone https://github.com/smswithoutborders/SMSWithoutBorders-Dev-FE.git ${REPOS}/${DEV-FRONT-END} & \
+	git clone https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE.git ${REPOS}/${DEV-BACK-END} & \
+	git clone https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI.git ${REPOS}/${OPEN-API} & \
+	git clone https://github.com/smswithoutborders/SMSWithoutBorders-Product-deps-RabbitMQ.git ${REPOS}/${RABBITMQ}
 
 staging: clone
 	@git -C ${REPOS}/${DEV-FRONT-END} checkout staging
 	@git -C ${REPOS}/${DEV-BACK-END} checkout staging
 	@git -C ${REPOS}/${OPEN-API} checkout staging
 	@git -C ${REPOS}/${RABBITMQ} checkout staging
-
-clean:
-	@docker image rm dev_front-end -f
-	@docker image rm dev_back-end -f
-	@docker image rm open-api -f
-	@docker image rm rabbitmq -f
-	@docker container rm dev_front-end -f
-	@docker container rm dev_back-end -f
-	@docker container rm open-api -f
-	@docker container rm rabbitmq -f
-	@docker container prune
-	@docker image prune -a
-	@docker volume prune
-	@rm -r ${REPOS}
 
 update:
 	@git -C ${REPOS}/${DEV-FRONT-END} pull -r origin staging
