@@ -28,7 +28,7 @@ services:
         max-size: "10m"
         max-file: "3"
     volumes:
-      - "${SSL_FILE_PATH:?err}:${SSL_FILE_PATH}"
+      - "${SSL_FILE_PATH:?err}:/etc/ssl/certs/smswithoutborders/:ro"
       - "rmq-data:/var/lib/rabbitmq/mnesia/"
     build:
       context: ${PATH_RMQ}
